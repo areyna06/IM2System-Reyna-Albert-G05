@@ -26,8 +26,11 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         # Accounts made with `createsuperuser` are always Admins.
-        if self.is_superuser:
+        # Otherwise the role decides access to the user-management (Django admin) site.
+        if self.is_superuser and not self.pk:
             self.role = self.Role.ADMIN
+        is_admin = self.role == self.Role.ADMIN
+        self.is_staff = self.is_superuser = is_admin
         if self.email:
             self.email = self.email.strip().lower()
         super().save(*args, **kwargs)

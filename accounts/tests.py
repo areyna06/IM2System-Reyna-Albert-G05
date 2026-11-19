@@ -170,6 +170,17 @@ class RoleDashboardTests(TestCase):
         su = User.objects.create_superuser("root", "root@example.com", PASSWORD)
         self.assertEqual(su.role, User.Role.ADMIN)
 
+    def test_role_controls_user_management_access(self):
+        self.assertTrue(self.admin.is_staff and self.admin.is_superuser)
+        self.assertFalse(self.member.is_staff or self.member.is_superuser)
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get("/django-admin/accounts/user/").status_code, 200)
+        # Demoting an Admin to Member removes access.
+        self.admin.role = User.Role.MEMBER
+        self.admin.save()
+        self.assertFalse(self.admin.is_staff or self.admin.is_superuser)
+        self.assertEqual(self.client.get("/django-admin/accounts/user/").status_code, 302)
+
 
 @override_settings(MEDIA_ROOT="test_media_tmp")
 class ProfileTests(TestCase):
