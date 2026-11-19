@@ -1,0 +1,22 @@
+# Secrets
+.env
+.pgpw.tmp
+
+# Virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Django
+media/
+staticfiles/
+db.sqlite3
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
