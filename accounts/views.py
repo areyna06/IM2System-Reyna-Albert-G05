@@ -42,10 +42,6 @@ class LoginView(auth_views.LoginView):
         messages.success(self.request, f"Welcome back, {self.request.user.first_name or self.request.user.username}!")
         return response
 
-    def form_invalid(self, form):
-        messages.error(self.request, "Login failed.")
-        return super().form_invalid(form)
-
 
 class LogoutView(auth_views.LogoutView):
     def post(self, request, *args, **kwargs):
