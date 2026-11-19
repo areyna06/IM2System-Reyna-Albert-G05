@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block container_class %}narrow{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <div class="auth-head"><span class="brand-dot lg"></span><h1>Log in</h1><p class="muted">Welcome to {{ SITE_NAME }}.</p></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+  </form>
+  <p class="muted center">No account yet? <a href="{% url 'register' %}">Create one</a></p>
+</div>
+{% endblock %}

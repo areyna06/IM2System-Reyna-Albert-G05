@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="badge badge-member">Member</span><h1>Hi, {{ user.first_name|default:user.username }}</h1><p class="muted">Here's your account at a glance.</p></div>
+</div>
+<div class="grid-2">
+  <div class="card">
+    <h2>Profile completeness</h2>
+    <div class="progress"><div class="progress-bar" style="width: {{ completeness }}%"></div></div>
+    <p class="muted">{{ completeness }}% complete{% if completeness < 100 %} — add your missing details.{% else %}. Nice!{% endif %}</p>
+    <a class="btn" href="{% url 'profile_edit' %}">Edit profile</a>
+  </div>
+  <div class="card">
+    <h2>Account</h2>
+    <dl class="kv">
+      <dt>Username</dt><dd>@{{ user.username }}</dd>
+      <dt>Email</dt><dd>{{ user.email }}</dd>
+      <dt>Member since</dt><dd>{{ user.date_joined|date:"F j, Y" }}</dd>
+      <dt>Last login</dt><dd>{{ user.last_login|date:"M j, Y g:i A"|default:"—" }}</dd>
+    </dl>
+  </div>
+</div>
+<div class="card soon">
+  <h2>Coming soon</h2>
+  <p class="muted">More member features will appear here as the system is built.</p>
+</div>
+{% endblock %}

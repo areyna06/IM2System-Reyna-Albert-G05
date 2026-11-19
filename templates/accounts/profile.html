@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My profile{% endblock %}
+{% block container_class %}medium{% endblock %}
+{% block content %}
+<div class="card profile-card">
+  <div class="profile-top">
+    {% if profile_user.photo %}<img class="avatar" src="{{ profile_user.photo.url }}" alt="Profile photo">
+    {% else %}<div class="avatar avatar-fallback">{{ profile_user.initials }}</div>{% endif %}
+    <div>
+      <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+      <p class="muted">@{{ profile_user.username }} · <span class="badge {% if profile_user.is_admin_role %}badge-admin{% else %}badge-member{% endif %}">{{ profile_user.get_role_display }}</span></p>
+    </div>
+  </div>
+  <dl class="kv">
+    <dt>First name</dt><dd>{{ profile_user.first_name|default:"—" }}</dd>
+    <dt>Last name</dt><dd>{{ profile_user.last_name|default:"—" }}</dd>
+    <dt>Email</dt><dd>{{ profile_user.email }}</dd>
+    <dt>Contact number</dt><dd>{{ profile_user.contact_number|default:"—" }}</dd>
+    <dt>Member since</dt><dd>{{ profile_user.date_joined|date:"F j, Y" }}</dd>
+  </dl>
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+    <a class="btn" href="{% url 'password_change' %}">Change password</a>
+  </div>
+</div>
+{% endblock %}

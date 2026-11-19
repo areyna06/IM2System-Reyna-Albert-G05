@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block container_class %}narrow{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <div class="auth-head"><span class="brand-dot lg"></span><h1>Create account</h1><p class="muted">Fields marked * are required.</p></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    <div class="row-2">
+      {% with field=form.first_name %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.last_name %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=form.username %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.email %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.password1 %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.password2 %}{% include "partials/field.html" %}{% endwith %}
+    <button type="submit" class="btn btn-primary btn-block">Create account</button>
+  </form>
+  <p class="muted center">Already registered? <a href="{% url 'login' %}">Log in</a></p>
+</div>
+{% endblock %}
