@@ -168,3 +168,40 @@ tr:last-child td { border-bottom: 0; }
   .nav a, .nav-btn { padding: 0.4rem 0.6rem; }
   h1 { font-size: 1.4rem; }
 }
+
+/* Events */
+input[type="number"], input[type="datetime-local"], input[type="date"], input[type="search"] {
+  width: 100%; padding: 0.7rem 0.85rem; font: inherit; font-size: 16px; color: var(--text);
+  background: var(--bg-2); border: 1px solid var(--card-border); border-radius: 11px; outline: none;
+  color-scheme: dark;
+}
+select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 156, 255, 0.2); outline: none; }
+.has-error select, .has-error textarea { border-color: var(--danger); }
+textarea { resize: vertical; }
+.btn-sm { padding: 0.35rem 0.7rem; font-size: 0.82rem; border-radius: 9px; }
+.btn-danger { background: rgba(255, 107, 122, 0.14); border-color: rgba(255, 107, 122, 0.4); color: #ffc2c8; }
+.btn-danger:hover { background: rgba(255, 107, 122, 0.24); }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.row-actions { white-space: nowrap; text-align: right; }
+.row-actions > * { margin-left: 0.25rem; }
+.filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+.filters .field { margin: 0; flex: 1 1 160px; }
+.filters .field.grow { flex: 3 1 240px; }
+.status-draft { background: rgba(255,255,255,0.08); color: var(--muted); }
+.status-open { background: rgba(74, 222, 128, 0.15); color: #a8f0c2; }
+.status-closed { background: rgba(250, 204, 21, 0.15); color: #fde68a; }
+.status-completed { background: rgba(96, 165, 250, 0.15); color: #c3dcff; }
+.status-cancelled { background: rgba(255, 107, 122, 0.15); color: #ffc2c8; }
+.status-registered { background: rgba(74, 222, 128, 0.15); color: #a8f0c2; }
+.event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1rem; }
+.event-card { display: flex; flex-direction: column; margin: 0; }
+.event-card h2 { margin: 0.4rem 0 0.3rem; }
+.event-card .meta { color: var(--muted); font-size: 0.86rem; margin: 0 0 0.8rem; }
+.event-card .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.slots { font-weight: 600; }
+.slots.full { color: var(--danger); }
+.desc { white-space: pre-line; }
+@media (max-width: 680px) {
+  .row-actions { white-space: normal; }
+  .row-actions > * { margin: 0.15rem 0; }
+}
