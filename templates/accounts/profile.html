@@ -18,8 +18,21 @@
     <dt>Contact number</dt><dd>{{ profile_user.contact_number|default:"—" }}</dd>
     <dt>Member since</dt><dd>{{ profile_user.date_joined|date:"F j, Y" }}</dd>
   </dl>
+  {% if profile_user.is_member_role %}
+  <h2 style="margin-top:1.4rem">Student details</h2>
+  {% if student %}
+  <dl class="kv">
+    <dt>Student number</dt><dd>{{ student.student_number }}</dd>
+    <dt>Program</dt><dd>{{ student.program }}</dd>
+    <dt>Year level</dt><dd>Year {{ student.year_level }}</dd>
+  </dl>
+  {% else %}
+  <p class="muted">Not added yet. You need these to register for events.</p>
+  {% endif %}
+  {% endif %}
   <div class="actions">
     <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+    {% if profile_user.is_member_role %}<a class="btn" href="{% url 'student_profile_edit' %}">{% if student %}Edit{% else %}Add{% endif %} student details</a>{% endif %}
     <a class="btn" href="{% url 'password_change' %}">Change password</a>
   </div>
 </div>

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import User
+from .models import StudentProfile, User
 
 MAX_PHOTO_MB = 2
 
@@ -68,3 +68,26 @@ class ProfileForm(forms.ModelForm):
         if photo and hasattr(photo, "size") and photo.size > MAX_PHOTO_MB * 1024 * 1024:
             raise forms.ValidationError(f"Photo must be {MAX_PHOTO_MB} MB or smaller.")
         return photo
+
+
+class StudentProfileForm(forms.ModelForm):
+    """Student number, program and year level, required before registering for events."""
+
+    class Meta:
+        model = StudentProfile
+        fields = ("student_number", "program", "year_level")
+        widgets = {"year_level": forms.Select(choices=[("", "Select year level")] + [(i, f"Year {i}") for i in range(1, 6)])}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["student_number"].widget.attrs["placeholder"] = "e.g. 21-1234-567"
+        self.fields["program"].widget.attrs["placeholder"] = "e.g. BSIT"
+
+    def clean_student_number(self):
+        number = self.cleaned_data["student_number"].strip()
+        if StudentProfile.objects.filter(student_number=number).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This student number is already registered to another account.")
+        return number
+
+    def clean_program(self):
+        return self.cleaned_data["program"].strip().upper()
