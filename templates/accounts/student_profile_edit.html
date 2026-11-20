@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Student details{% endblock %}
+{% block container_class %}medium{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Student details</h1>
+  <p class="muted">Officers use these details on the participant list. You need them to register for events.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% include "partials/form_errors.html" %}
+    {% with field=form.student_number %}{% include "partials/field.html" %}{% endwith %}
+    <div class="row-2">
+      {% with field=form.program %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.year_level %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Save details</button>
+      <a class="btn" href="{% if next %}{{ next }}{% else %}{% url 'profile' %}{% endif %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

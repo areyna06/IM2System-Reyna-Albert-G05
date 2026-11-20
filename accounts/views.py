@@ -3,10 +3,14 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+
+from events.models import Event, EventRegistration, Organization
 
 from .decorators import role_required
-from .forms import LoginForm, ProfileForm, RegistrationForm
-from .models import User
+from .forms import LoginForm, ProfileForm, RegistrationForm, StudentProfileForm
+from .models import StudentProfile, User
 
 
 def home(request):
@@ -64,6 +68,10 @@ def admin_dashboard(request):
         "admin_count": users.filter(role=User.Role.ADMIN).count(),
         "member_count": users.filter(role=User.Role.MEMBER).count(),
         "recent_users": users[:10],
+        "event_count": Event.objects.exclude(status=Event.Status.CANCELLED).count(),
+        "open_event_count": Event.objects.filter(status=Event.Status.OPEN).count(),
+        "organization_count": Organization.objects.filter(is_active=True).count(),
+        "registration_count": EventRegistration.objects.filter(status=EventRegistration.Status.REGISTERED).count(),
     }
     return render(request, "accounts/admin_dashboard.html", context)
 
@@ -73,13 +81,49 @@ def member_dashboard(request):
     user = request.user
     checks = [user.first_name, user.last_name, user.email, user.contact_number, user.photo]
     completeness = round(100 * sum(bool(c) for c in checks) / len(checks))
-    return render(request, "accounts/member_dashboard.html", {"completeness": completeness})
+    upcoming = (
+        EventRegistration.objects.filter(
+            student__user=user, status=EventRegistration.Status.REGISTERED, event__end_datetime__gte=timezone.now()
+        )
+        .exclude(event__status=Event.Status.CANCELLED)
+        .select_related("event", "event__venue")
+        .order_by("event__start_datetime")
+    )
+    return render(request, "accounts/member_dashboard.html", {
+        "completeness": completeness,
+        "upcoming": upcoming[:3],
+        "upcoming_count": upcoming.count(),
+        "open_events": Event.objects.filter(status=Event.Status.OPEN, registration_deadline__gte=timezone.now()).count(),
+        "has_student_profile": StudentProfile.objects.filter(user=user).exists(),
+    })
 
 
 @login_required
 def profile(request):
     # No user id in the URL: everyone can only ever see their own profile.
-    return render(request, "accounts/profile.html", {"profile_user": request.user})
+    student = StudentProfile.objects.filter(user=request.user).first()
+    return render(request, "accounts/profile.html", {"profile_user": request.user, "student": student})
+
+
+@role_required(User.Role.MEMBER)
+def student_profile_edit(request):
+    """Add or update the student details needed to register for events."""
+    student = StudentProfile.objects.filter(user=request.user).first()
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = ""
+    if request.method == "POST":
+        form = StudentProfileForm(request.POST, instance=student)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+            messages.success(request, "Student details saved.")
+            return redirect(next_url or "profile")
+        messages.error(request, "Please fix the errors below.")
+    else:
+        form = StudentProfileForm(instance=student)
+    return render(request, "accounts/student_profile_edit.html", {"form": form, "next": next_url})
 
 
 @login_required

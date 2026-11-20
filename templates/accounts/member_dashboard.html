@@ -21,8 +21,25 @@
     </dl>
   </div>
 </div>
-<div class="card soon">
-  <h2>Coming soon</h2>
-  <p class="muted">More member features will appear here as the system is built.</p>
+<div class="card">
+  <div class="page-head" style="margin-bottom:0.6rem">
+    <h2 style="margin:0">My upcoming events ({{ upcoming_count }})</h2>
+    <div class="actions" style="margin:0"><a class="btn btn-sm" href="{% url 'my_events' %}">My events</a><a class="btn btn-sm btn-primary" href="{% url 'event_list' %}">Browse {{ open_events }} open event{{ open_events|pluralize }}</a></div>
+  </div>
+  {% if not has_student_profile %}<div class="alert alert-info">Add your <a href="{% url 'student_profile_edit' %}">student details</a> so you can register for events.</div>{% endif %}
+  {% for reg in upcoming %}
+    <p style="margin:0.4rem 0"><a href="{% url 'event_detail' reg.event.pk %}"><strong>{{ reg.event.title }}</strong></a>
+      <span class="muted"> · {{ reg.event.start_datetime|date:"D, M j · g:i A" }} · {{ reg.event.venue.name }}</span></p>
+  {% empty %}
+    <p class="muted">You have not registered for any upcoming events yet.</p>
+  {% endfor %}
 </div>
+{% if is_organizer %}
+<div class="card">
+  <span class="badge badge-admin">Organizer</span>
+  <h2 style="margin-top:0.5rem">Your organization's events</h2>
+  <p class="muted">You are an active officer, so you can add, edit, cancel and delete your organization's events.</p>
+  <div class="actions"><a class="btn btn-primary" href="{% url 'manage_events' %}">Manage events</a><a class="btn" href="{% url 'event_create' %}">+ New event</a></div>
+</div>
+{% endif %}
 {% endblock %}

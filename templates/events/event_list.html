@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Browse events{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Upcoming events</h1><p class="muted">Open events you can still register for.</p></div>
+  {% if user.is_member_role %}<a class="btn" href="{% url 'my_events' %}">My events</a>{% endif %}
+</div>
+<form method="get" class="filters card" novalidate>
+  <div class="field grow"><label for="{{ form.q.id_for_label }}">Search</label>{{ form.q }}</div>
+  <div class="field"><label for="{{ form.category.id_for_label }}">Category</label>{{ form.category }}</div>
+  <div class="field"><label for="{{ form.organization.id_for_label }}">Organization</label>{{ form.organization }}</div>
+  <div class="field"><label for="{{ form.venue.id_for_label }}">Venue</label>{{ form.venue }}</div>
+  <div class="field"><label for="{{ form.date.id_for_label }}">Date</label>{{ form.date }}</div>
+  <div class="actions" style="margin:0">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if filtered %}<a class="btn" href="{% url 'event_list' %}">Clear</a>{% endif %}
+  </div>
+  {% for field in form %}{% for error in field.errors %}<p class="error" style="flex-basis:100%">{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
+</form>
+
+{% if events %}
+<div class="event-grid">
+  {% for event in events %}
+  <div class="card event-card">
+    <div><span class="badge badge-member">{{ event.category }}</span> <span class="muted small">{{ event.organization.acronym }}</span></div>
+    <h2><a href="{% url 'event_detail' event.pk %}">{{ event.title }}</a></h2>
+    <p class="meta">{{ event.start_datetime|date:"D, M j · g:i A" }}<br>{{ event.venue.name }}</p>
+    <div class="foot">
+      <span class="slots {% if event.is_full %}full{% endif %}">{% if event.is_full %}Full{% else %}{{ event.remaining_slots }} of {{ event.capacity }} slots left{% endif %}</span>
+      {% if event.pk in my_event_ids %}<span class="badge status-registered">Registered</span>
+      {% else %}<a class="btn btn-sm" href="{% url 'event_detail' event.pk %}">View</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card center"><p class="muted">{% if filtered %}No events match your search.{% else %}No open events right now. Check back soon!{% endif %}</p></div>
+{% endif %}
+{% endblock %}

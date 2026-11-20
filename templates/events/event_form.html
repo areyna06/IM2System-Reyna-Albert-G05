@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if event %}Edit event{% else %}New event{% endif %}{% endblock %}
+{% block container_class %}medium{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{% if event %}Edit “{{ event.title }}”{% else %}New event{% endif %}</h1>
+  <p class="muted">Fields marked <span class="req">*</span> are required.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    {% with field=form.organization %}{% include "partials/field.html" %}{% endwith %}
+    {% with field=form.title %}{% include "partials/field.html" %}{% endwith %}
+    <div class="row-2">
+      {% with field=form.category %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.venue %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=form.description %}{% include "partials/field.html" %}{% endwith %}
+    <div class="row-2">
+      {% with field=form.start_datetime %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.end_datetime %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    {% with field=form.registration_deadline %}{% include "partials/field.html" %}{% endwith %}
+    <div class="row-2">
+      {% with field=form.capacity %}{% include "partials/field.html" %}{% endwith %}
+      {% with field=form.status %}{% include "partials/field.html" %}{% endwith %}
+    </div>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">{% if event %}Save changes{% else %}Create event{% endif %}</button>
+      <a class="btn" href="{% url 'manage_events' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
