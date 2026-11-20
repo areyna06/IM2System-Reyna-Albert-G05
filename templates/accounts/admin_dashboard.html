@@ -11,6 +11,14 @@
   <div class="card stat"><span class="stat-label">Members</span><span class="stat-value">{{ member_count }}</span></div>
 </div>
 <div class="card">
+  <div class="page-head" style="margin-bottom:0.6rem"><h2 style="margin:0">Events</h2><a class="btn btn-sm" href="{% url 'manage_events' %}">Manage all events</a></div>
+  <div class="stats" style="margin:0">
+    <div class="stat"><span class="stat-label">Active events</span><span class="stat-value">{{ event_count }}</span></div>
+    <div class="stat"><span class="stat-label">Open for registration</span><span class="stat-value">{{ open_event_count }}</span></div>
+    <div class="stat"><span class="stat-label">Organizations</span><span class="stat-value">{{ organization_count }}</span></div>
+  </div>
+</div>
+<div class="card">
   <h2>Recent sign-ups</h2>
   <div class="table-wrap">
     <table>
