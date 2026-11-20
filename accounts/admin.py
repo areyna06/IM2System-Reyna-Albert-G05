@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
+from .models import StudentProfile, User
 
 
 @admin.register(User)
@@ -14,3 +14,9 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ("Role & profile", {"fields": ("email", "role")}),
     )
+
+
+@admin.register(StudentProfile)
+class StudentProfileAdmin(admin.ModelAdmin):
+    list_display = ("student_number", "user", "program", "year_level")
+    search_fields = ("student_number", "user__username", "user__first_name", "user__last_name")

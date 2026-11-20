@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
 
@@ -52,3 +52,29 @@ class User(AbstractUser):
         name = self.get_full_name() or self.username
         parts = name.split()
         return "".join(p[0] for p in parts[:2]).upper()
+
+
+class StudentProfile(models.Model):
+    """School details of a student account (SDD table student_profiles). Admins have none."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
+    student_number = models.CharField(
+        max_length=20,
+        unique=True,
+        validators=[RegexValidator(r"^[0-9][0-9\-]{3,19}$", "Use digits and dashes only, e.g. 21-1234-567.")],
+    )
+    program = models.CharField(max_length=100, help_text="Degree program, e.g. BSIT.")
+    year_level = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(year_level__gte=1, year_level__lte=5),
+                name="student_year_level_1_to_5",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.student_number} · {self.user.get_full_name() or self.user.username}"
