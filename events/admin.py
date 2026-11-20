@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Event, EventCategory, Organization, OrganizationMember, Venue
+from .models import Event, EventCategory, EventRegistration, Organization, OrganizationMember, Venue
 
 
 class MemberInline(admin.TabularInline):
@@ -41,3 +41,10 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ("title", "organization", "venue", "start_datetime", "capacity", "status")
     list_filter = ("status", "organization", "category")
     search_fields = ("title",)
+
+
+@admin.register(EventRegistration)
+class EventRegistrationAdmin(admin.ModelAdmin):
+    list_display = ("event", "student", "status", "registered_at", "cancelled_at")
+    list_filter = ("status", "event__organization")
+    search_fields = ("event__title", "student__student_number", "student__user__last_name")

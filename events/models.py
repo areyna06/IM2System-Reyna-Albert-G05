@@ -119,5 +119,69 @@ class Event(models.Model):
         return self.status == self.Status.CANCELLED
 
     @property
+    def registered_count(self):
+        """Active registrations. Uses the `num_registered` annotation when the queryset has it."""
+        if hasattr(self, "num_registered"):
+            return self.num_registered
+        return self.registrations.filter(status=EventRegistration.Status.REGISTERED).count()
+
+    @property
+    def remaining_slots(self):
+        return max(self.capacity - self.registered_count, 0)
+
+    @property
+    def is_full(self):
+        return self.remaining_slots == 0
+
+    @property
+    def registration_is_open(self):
+        """BR-14: Open status and the deadline has not passed."""
+        return self.status == self.Status.OPEN and timezone.now() <= self.registration_deadline
+
+    @property
     def has_started(self):
         return timezone.now() >= self.start_datetime
+
+
+class EventRegistration(models.Model):
+    """A student's registration for an event (SDD table event_registrations)."""
+
+    class Status(models.TextChoices):
+        REGISTERED = "REGISTERED", "Registered"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name="registrations")
+    student = models.ForeignKey(StudentProfile, on_delete=models.PROTECT, related_name="registrations")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.REGISTERED)
+    registered_at = models.DateTimeField(default=timezone.now)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-registered_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["event", "student"], name="unique_event_registration"),
+            models.CheckConstraint(
+                condition=Q(status__in=["REGISTERED", "CANCELLED"]), name="registration_status_valid"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.student} → {self.event} ({self.get_status_display()})"
+
+    @property
+    def is_active(self):
+        return self.status == self.Status.REGISTERED
+
+    @property
+    def can_cancel(self):
+        """BR-18: only before the event starts."""
+        return self.is_active and not self.event.has_started
+
+
+def with_registered_count(queryset):
+    """Annotate events with their number of active registrations (`num_registered`)."""
+    return queryset.annotate(
+        num_registered=models.Count(
+            "registrations", filter=Q(registrations__status=EventRegistration.Status.REGISTERED)
+        )
+    )
