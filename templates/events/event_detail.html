@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'event_list' %}">&larr; All events</a></p>
+<div class="grid-2 detail-grid">
+  <div class="card">
+    <div><span class="badge badge-member">{{ event.category }}</span> {% include "partials/event_status.html" %}</div>
+    <h1>{{ event.title }}</h1>
+    <p class="muted">by {{ event.organization.name }} ({{ event.organization.acronym }})</p>
+    <p class="desc">{{ event.description }}</p>
+  </div>
+  <div class="card">
+    <h2>Details</h2>
+    <dl class="kv">
+      <dt>Starts</dt><dd>{{ event.start_datetime|date:"l, F j, Y · g:i A" }}</dd>
+      <dt>Ends</dt><dd>{{ event.end_datetime|date:"F j, Y · g:i A" }}</dd>
+      <dt>Venue</dt><dd>{{ event.venue.name }}<div class="muted small">{{ event.venue.building }}{% if event.venue.room_number %} · Room {{ event.venue.room_number }}{% endif %}</div></dd>
+      <dt>Register by</dt><dd>{{ event.registration_deadline|date:"F j, Y · g:i A" }}</dd>
+      <dt>Slots</dt><dd><span class="slots {% if event.is_full %}full{% endif %}">{{ event.remaining_slots }} of {{ event.capacity }} left</span></dd>
+    </dl>
+    <div class="progress" style="margin-top:1rem"><div class="progress-bar" style="width: {% widthratio event.registered_count event.capacity 100 %}%"></div></div>
+
+    {% if is_student %}
+      {% if registration and registration.is_active %}
+        <div class="alert alert-success" style="margin-top:1rem">You are registered for this event{% if registration.registered_at %} (since {{ registration.registered_at|date:"M j, g:i A" }}){% endif %}.</div>
+        {% if registration.can_cancel %}
+        <form method="post" action="{% url 'registration_cancel' registration.pk %}" onsubmit="return confirm('Cancel your registration? Your slot will be given up.');">
+          {% csrf_token %}<button type="submit" class="btn btn-danger">Cancel my registration</button>
+        </form>
+        {% endif %}
+      {% elif event.registration_is_open and not event.is_full %}
+        {% if registration %}<p class="muted small" style="margin-top:1rem">You cancelled your registration on {{ registration.cancelled_at|date:"M j, g:i A" }}. You can register again.</p>{% endif %}
+        <form method="post" action="{% url 'event_register' event.pk %}" style="margin-top:1rem">
+          {% csrf_token %}<button type="submit" class="btn btn-primary btn-block">Register for this event</button>
+        </form>
+      {% else %}
+        <div class="alert alert-info" style="margin-top:1rem">
+          {% if event.is_cancelled %}This event was cancelled.
+          {% elif event.status != "OPEN" %}Registration is not open for this event.
+          {% elif event.is_full %}This event is full.
+          {% else %}The registration deadline has passed.{% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+
+    {% if can_manage %}
+    <div class="actions">
+      <a class="btn" href="{% url 'event_participants' event.pk %}">Participants ({{ event.registered_count }})</a>
+      {% if not event.is_cancelled %}<a class="btn" href="{% url 'event_edit' event.pk %}">Edit event</a>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
