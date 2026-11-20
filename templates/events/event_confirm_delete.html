@@ -5,7 +5,11 @@
 <div class="card">
   <h1>Delete event?</h1>
   <p>This permanently deletes <strong>{{ event.title }}</strong> ({{ event.start_datetime|date:"M j, Y g:i A" }}). This cannot be undone.</p>
+  {% if event.registrations.exists %}
+  <div class="alert alert-error">This event has {{ event.registrations.count }} registration{{ event.registrations.count|pluralize }}, so it cannot be deleted. Cancel it instead.</div>
+  {% else %}
   <p class="muted small">Events that already have registrations cannot be deleted — cancel them instead.</p>
+  {% endif %}
   <form method="post" class="actions">
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Delete event</button>

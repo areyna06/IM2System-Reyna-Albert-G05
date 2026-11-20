@@ -21,12 +21,13 @@
       <tbody>
       {% for event in events %}
         <tr>
-          <td><strong>{{ event.title }}</strong><div class="muted small">{{ event.organization.acronym }} · {{ event.category }}</div></td>
+          <td><a href="{% url 'event_detail' event.pk %}"><strong>{{ event.title }}</strong></a><div class="muted small">{{ event.organization.acronym }} · {{ event.category }}</div></td>
           <td>{{ event.start_datetime|date:"M j, Y" }}<div class="muted small">{{ event.start_datetime|date:"g:i A" }} – {{ event.end_datetime|date:"g:i A" }}</div></td>
           <td>{{ event.venue.name }}</td>
-          <td>{{ event.capacity }}</td>
+          <td><a href="{% url 'event_participants' event.pk %}">{{ event.registered_count }} / {{ event.capacity }}</a></td>
           <td>{% include "partials/event_status.html" %}</td>
           <td class="row-actions">
+            <a class="btn btn-sm" href="{% url 'event_participants' event.pk %}">Participants</a>
             {% if not event.is_cancelled %}<a class="btn btn-sm" href="{% url 'event_edit' event.pk %}">Edit</a>{% endif %}
             {% if not event.is_cancelled and event.status != "COMPLETED" %}
             <form method="post" action="{% url 'event_cancel' event.pk %}" class="inline" onsubmit="return confirm('Cancel “{{ event.title|escapejs }}”? Students will see it as cancelled.');">{% csrf_token %}<button class="btn btn-sm" type="submit">Cancel</button></form>
