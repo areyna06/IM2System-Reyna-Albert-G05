@@ -21,8 +21,12 @@
       {% else %}
         <a href="{% url 'member_dashboard' %}" class="{% if name == 'member_dashboard' %}active{% endif %}">Dashboard</a>
       {% endif %}
+      <a href="{% url 'event_list' %}" class="{% if name == 'event_list' or name == 'event_detail' %}active{% endif %}">Events</a>
+      {% if user.is_member_role %}
+        <a href="{% url 'my_events' %}" class="{% if name == 'my_events' %}active{% endif %}">My events</a>
+      {% endif %}
       {% if is_organizer %}
-        <a href="{% url 'manage_events' %}" class="{% if name == 'manage_events' or name == 'event_create' or name == 'event_edit' or name == 'event_delete' %}active{% endif %}">Manage events</a>
+        <a href="{% url 'manage_events' %}" class="{% if name == 'manage_events' or name == 'event_create' or name == 'event_edit' or name == 'event_delete' or name == 'event_participants' %}active{% endif %}">Manage events</a>
       {% endif %}
       <a href="{% url 'profile' %}" class="{% if name == 'profile' or name == 'profile_edit' or name == 'password_change' %}active{% endif %}">Profile</a>
       {% endwith %}

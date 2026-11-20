@@ -205,3 +205,4 @@ textarea { resize: vertical; }
   .row-actions { white-space: normal; }
   .row-actions > * { margin: 0.15rem 0; }
 }
+@media (max-width: 680px) { .detail-grid { grid-template-columns: 1fr; } }

@@ -72,6 +72,10 @@ class EventForm(forms.ModelForm):
             self.add_error("registration_deadline", "The registration deadline must be on or before the start.")
         if venue and capacity and capacity > venue.capacity:
             self.add_error("capacity", f"{venue.name} only holds {venue.capacity} people.")
+        if self.instance.pk and capacity:
+            registered = self.instance.registered_count
+            if capacity < registered:
+                self.add_error("capacity", f"{registered} students are already registered; capacity cannot be lower.")
 
         if venue and start and end and end > start:
             clash = (
@@ -88,3 +92,18 @@ class EventForm(forms.ModelForm):
                     f"{timezone.localtime(clash.end_datetime):%I:%M %p}).",
                 )
         return cleaned
+
+
+class EventFilterForm(forms.Form):
+    """Search and filter bar on the Browse events page (F-03)."""
+
+    q = forms.CharField(required=False, label="Search", widget=forms.TextInput(attrs={"placeholder": "Search event title", "type": "search"}))
+    category = forms.ModelChoiceField(EventCategory.objects.all(), required=False, empty_label="All categories")
+    organization = forms.ModelChoiceField(None, required=False, empty_label="All organizations")
+    venue = forms.ModelChoiceField(Venue.objects.all(), required=False, empty_label="All venues")
+    date = forms.DateField(required=False, label="On date", widget=forms.DateInput(attrs={"type": "date"}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Organization
+        self.fields["organization"].queryset = Organization.objects.filter(is_active=True)

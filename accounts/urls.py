@@ -12,5 +12,6 @@ urlpatterns = [
     path("dashboard/member/", views.member_dashboard, name="member_dashboard"),
     path("profile/", views.profile, name="profile"),
     path("profile/edit/", views.profile_edit, name="profile_edit"),
+    path("profile/student/", views.student_profile_edit, name="student_profile_edit"),
     path("profile/password/", views.PasswordChangeView.as_view(), name="password_change"),
 ]
