@@ -21,8 +21,12 @@
     </dl>
   </div>
 </div>
-<div class="card soon">
-  <h2>Coming soon</h2>
-  <p class="muted">More member features will appear here as the system is built.</p>
+{% if is_organizer %}
+<div class="card">
+  <span class="badge badge-admin">Organizer</span>
+  <h2 style="margin-top:0.5rem">Your organization's events</h2>
+  <p class="muted">You are an active officer, so you can add, edit, cancel and delete your organization's events.</p>
+  <div class="actions"><a class="btn btn-primary" href="{% url 'manage_events' %}">Manage events</a><a class="btn" href="{% url 'event_create' %}">+ New event</a></div>
 </div>
+{% endif %}
 {% endblock %}

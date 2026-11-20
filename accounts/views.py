@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
+from events.models import Event, Organization
+
 from .decorators import role_required
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import User
@@ -64,6 +66,9 @@ def admin_dashboard(request):
         "admin_count": users.filter(role=User.Role.ADMIN).count(),
         "member_count": users.filter(role=User.Role.MEMBER).count(),
         "recent_users": users[:10],
+        "event_count": Event.objects.exclude(status=Event.Status.CANCELLED).count(),
+        "open_event_count": Event.objects.filter(status=Event.Status.OPEN).count(),
+        "organization_count": Organization.objects.filter(is_active=True).count(),
     }
     return render(request, "accounts/admin_dashboard.html", context)
 
