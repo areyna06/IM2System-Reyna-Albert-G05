@@ -6,5 +6,5 @@
     {{ field }}
   {% endif %}
   {% for error in field.errors %}<p class="error">{{ error }}</p>{% endfor %}
-  {% if field.help_text and not field.errors %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+  {% if field.help_text and not field.errors %}<div class="help">{{ field.help_text|safe }}{# help_text is written by developers (e.g. Django password rules), never user input #}</div>{% endif %}
 </div>

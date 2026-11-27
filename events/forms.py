@@ -77,6 +77,15 @@ class EventForm(forms.ModelForm):
             if capacity < registered:
                 self.add_error("capacity", f"{registered} students are already registered; capacity cannot be lower.")
 
+        status = cleaned.get("status")
+        now = timezone.now()
+        if status == Event.Status.OPEN and deadline and deadline < now:
+            self.add_error("status", "Registration cannot be Open because the deadline has already passed.")
+        if status == Event.Status.COMPLETED and end and end > now:
+            self.add_error("status", "An event can only be marked Completed after it ends.")
+        if status == Event.Status.DRAFT and self.instance.pk and self.instance.registered_count:
+            self.add_error("status", "Students are already registered, so this event cannot go back to Draft.")
+
         if venue and start and end and end > start:
             clash = (
                 Event.objects.filter(venue=venue, start_datetime__lt=end, end_datetime__gt=start)
