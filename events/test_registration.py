@@ -98,7 +98,9 @@ class RegistrationTests(EventTestBase):
         EventRegistration.objects.create(event=self.event, student=self.officer.student_profile)
         third = make_user("tina", student_number="22-0003-003")
         EventRegistration.objects.create(
-            event=self.event, student=third.student_profile, status=EventRegistration.Status.CANCELLED
+            event=self.event, student=third.student_profile,
+            status=EventRegistration.Status.CANCELLED,
+            registered_at=timezone.now() - timedelta(minutes=1), cancelled_at=timezone.now(),
         )
         self.assertContains(self.register(), "You are registered for")
 

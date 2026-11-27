@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MinLengthValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -11,7 +11,11 @@ class Organization(models.Model):
     """A recognized student organization that holds events."""
 
     name = models.CharField(max_length=150, unique=True)
-    acronym = models.CharField(max_length=20, unique=True)
+    acronym = models.CharField(
+        max_length=20,
+        unique=True,
+        validators=[RegexValidator(r"^[A-Z0-9&\-]{2,20}$", "Use 2-20 capital letters, digits, & or -.")],
+    )
     description = models.TextField(blank=True)
     adviser_name = models.CharField(max_length=100, blank=True)
     contact_email = models.EmailField(max_length=100, blank=True)
@@ -86,7 +90,7 @@ class Event(models.Model):
     category = models.ForeignKey(EventCategory, on_delete=models.PROTECT, related_name="events")
     venue = models.ForeignKey(Venue, on_delete=models.PROTECT, related_name="events")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events_created")
-    title = models.CharField(max_length=150)
+    title = models.CharField(max_length=150, validators=[MinLengthValidator(3)])
     description = models.TextField()
     start_datetime = models.DateTimeField("starts")
     end_datetime = models.DateTimeField("ends")
@@ -162,6 +166,15 @@ class EventRegistration(models.Model):
             models.UniqueConstraint(fields=["event", "student"], name="unique_event_registration"),
             models.CheckConstraint(
                 condition=Q(status__in=["REGISTERED", "CANCELLED"]), name="registration_status_valid"
+            ),
+            # A cancelled registration always records when; an active one never has a cancel date.
+            models.CheckConstraint(
+                condition=(Q(status="REGISTERED", cancelled_at__isnull=True) | Q(status="CANCELLED", cancelled_at__isnull=False)),
+                name="registration_cancelled_at_matches_status",
+            ),
+            models.CheckConstraint(
+                condition=Q(cancelled_at__isnull=True) | Q(cancelled_at__gte=models.F("registered_at")),
+                name="registration_cancelled_after_registered",
             ),
         ]
 
