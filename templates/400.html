@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Bad request{% endblock %}
+{% block container_class %}narrow{% endblock %}
+{% block content %}
+<div class="card center">
+  <h1>400 · Bad request</h1>
+  <p class="muted">The request could not be understood. Go back and try again.</p>
+  <a class="btn btn-primary" href="{% url 'home' %}">Go home</a>
+</div>
+{% endblock %}
