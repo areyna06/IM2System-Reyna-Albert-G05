@@ -191,6 +191,29 @@ class EventRegistration(models.Model):
         return self.is_active and not self.event.has_started
 
 
+def sync_event_statuses(now=None):
+    """Move events along their life cycle based on the clock (PD2 issue ISS-01).
+
+    * Open events whose registration deadline has passed become Closed.
+    * Open or Closed events that have ended become Completed.
+
+    Draft and Cancelled events are left alone. Runs as two UPDATE queries in one
+    transaction, so it is cheap enough to call before pages that list events.
+    Returns (closed_count, completed_count).
+    """
+    from django.db import transaction
+
+    now = now or timezone.now()
+    with transaction.atomic():
+        completed = Event.objects.filter(
+            status__in=[Event.Status.OPEN, Event.Status.CLOSED], end_datetime__lte=now
+        ).update(status=Event.Status.COMPLETED, updated_at=now)
+        closed = Event.objects.filter(
+            status=Event.Status.OPEN, registration_deadline__lt=now
+        ).update(status=Event.Status.CLOSED, updated_at=now)
+    return closed, completed
+
+
 def with_registered_count(queryset):
     """Annotate events with their number of active registrations (`num_registered`)."""
     return queryset.annotate(

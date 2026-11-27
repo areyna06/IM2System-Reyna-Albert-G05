@@ -23,6 +23,7 @@ def env(name, default=None, required=False):
 
 
 SECRET_KEY = env("SECRET_KEY", required=True)
+# DEBUG is off unless .env turns it on, so tracebacks are never shown by accident.
 DEBUG = env("DEBUG", "False").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = [h.strip() for h in env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
@@ -117,3 +118,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Sessions end when the browser closes unless the user ticks "Remember me".
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Security headers and cookies.
+SESSION_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+# Send cookies over HTTPS only when deployed (set COOKIE_SECURE=True in .env).
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = env("COOKIE_SECURE", "False").lower() in ("1", "true", "yes")
+
+# Log server errors to the console instead of showing them to users.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"django.request": {"handlers": ["console"], "level": "ERROR"}},
+}
