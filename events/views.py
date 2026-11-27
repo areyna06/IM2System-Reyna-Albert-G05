@@ -12,8 +12,15 @@ from accounts.decorators import role_required
 from accounts.models import StudentProfile, User
 
 from .forms import EventFilterForm, EventForm
-from .models import Event, EventRegistration, with_registered_count
+from .models import Event, EventRegistration, Venue, with_registered_count
 from .permissions import can_manage_event, officer_organizations, organizer_required
+
+
+def _lock_venue(data):
+    """Lock the chosen venue row so two officers can't book the same slot at once (BR-12)."""
+    venue_id = str(data.get("venue", ""))
+    if venue_id.isdigit():
+        list(Venue.objects.select_for_update().filter(pk=int(venue_id)))
 
 
 def _get_managed_event(request, pk):
@@ -47,11 +54,15 @@ def event_create(request):
         messages.error(request, "There are no active organizations to create events for.")
         return redirect("manage_events")
     if request.method == "POST":
-        form = EventForm(request.POST, user=request.user)
-        if form.is_valid():
-            event = form.save(commit=False)
-            event.created_by = request.user
-            event.save()
+        with transaction.atomic():
+            _lock_venue(request.POST)
+            form = EventForm(request.POST, user=request.user)
+            saved = form.is_valid()
+            if saved:
+                event = form.save(commit=False)
+                event.created_by = request.user
+                event.save()
+        if saved:
             messages.success(request, f"Event “{event.title}” created.")
             return redirect("manage_events")
         messages.error(request, "Please fix the errors below.")
@@ -67,9 +78,13 @@ def event_edit(request, pk):
         messages.error(request, "Cancelled events can no longer be edited.")
         return redirect("manage_events")
     if request.method == "POST":
-        form = EventForm(request.POST, instance=event, user=request.user)
-        if form.is_valid():
-            form.save()
+        with transaction.atomic():
+            _lock_venue(request.POST)
+            form = EventForm(request.POST, instance=event, user=request.user)
+            saved = form.is_valid()
+            if saved:
+                form.save()
+        if saved:
             messages.success(request, f"Event “{event.title}” updated.")
             return redirect("manage_events")
         messages.error(request, "Please fix the errors below.")
@@ -99,7 +114,10 @@ def event_delete(request, pk):
     if request.method == "POST":
         title = event.title
         try:
-            event.delete()
+            with transaction.atomic():
+                if event.registrations.exists():
+                    raise ProtectedError("Event has registrations", set())
+                event.delete()
         except ProtectedError:
             messages.error(request, f"“{title}” has registrations, so it cannot be deleted. Cancel it instead.")
             return redirect("manage_events")
@@ -225,9 +243,18 @@ def event_register(request, pk):
 @require_POST
 def registration_cancel(request, pk):
     """F-09: a student cancels their own registration before the event starts."""
-    registration = get_object_or_404(
-        EventRegistration.objects.select_related("event"), pk=pk, student__user=request.user
-    )
+    # Filtering by the logged-in student means another student's registration ID returns 404.
+    with transaction.atomic():
+        registration = get_object_or_404(
+            EventRegistration.objects.select_for_update(of=("self",)).select_related("event"), pk=pk, student__user=request.user
+        )
+        _cancel_registration(request, registration)
+    if request.POST.get("next") == "my_events":
+        return redirect("my_events")
+    return redirect("event_detail", pk=registration.event_id)
+
+
+def _cancel_registration(request, registration):
     if not registration.is_active:
         messages.info(request, "That registration is already cancelled.")
     elif registration.event.has_started:
@@ -239,9 +266,6 @@ def registration_cancel(request, pk):
         messages.success(
             request, f"Your registration for “{registration.event.title}” was cancelled. The slot is free again."
         )
-    if request.POST.get("next") == "my_events":
-        return redirect("my_events")
-    return redirect("event_detail", pk=registration.event_id)
 
 
 @role_required(User.Role.MEMBER)
