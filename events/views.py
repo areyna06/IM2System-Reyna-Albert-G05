@@ -12,7 +12,7 @@ from accounts.decorators import role_required
 from accounts.models import StudentProfile, User
 
 from .forms import EventFilterForm, EventForm
-from .models import Event, EventRegistration, with_registered_count
+from .models import Event, EventRegistration, sync_event_statuses, with_registered_count
 from .permissions import can_manage_event, officer_organizations, organizer_required
 
 
@@ -27,6 +27,7 @@ def _get_managed_event(request, pk):
 
 @organizer_required
 def manage_events(request):
+    sync_event_statuses()
     events = with_registered_count(Event.objects.select_related("organization", "venue", "category")).filter(
         organization__in=officer_organizations(request.user)
     )
@@ -136,6 +137,7 @@ def event_participants(request, pk):
 @login_required
 def event_list(request):
     """F-03: open, upcoming events with search and filters."""
+    sync_event_statuses()
     events = with_registered_count(
         Event.objects.select_related("organization", "venue", "category").filter(
             status=Event.Status.OPEN, start_datetime__gt=timezone.now()
@@ -167,6 +169,7 @@ def event_list(request):
 @login_required
 def event_detail(request, pk):
     """F-04: details and remaining slots, plus the Register / Cancel button."""
+    sync_event_statuses()
     event = get_object_or_404(
         with_registered_count(Event.objects.select_related("organization", "venue", "category", "created_by")), pk=pk
     )
@@ -247,6 +250,7 @@ def registration_cancel(request, pk):
 @role_required(User.Role.MEMBER)
 def my_events(request):
     """F-10: the student's own registrations, upcoming first."""
+    sync_event_statuses()
     registrations = EventRegistration.objects.filter(student__user=request.user).select_related(
         "event", "event__venue", "event__organization"
     )

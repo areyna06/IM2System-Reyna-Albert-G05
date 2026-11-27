@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from events.models import Event, EventRegistration, Organization
+from events.models import Event, EventRegistration, Organization, sync_event_statuses
 
 from .decorators import role_required
 from .forms import LoginForm, ProfileForm, RegistrationForm, StudentProfileForm
@@ -62,6 +62,7 @@ def dashboard(request):
 
 @role_required(User.Role.ADMIN)
 def admin_dashboard(request):
+    sync_event_statuses()
     users = User.objects.order_by("-date_joined")
     context = {
         "total_users": users.count(),
@@ -78,6 +79,7 @@ def admin_dashboard(request):
 
 @role_required(User.Role.MEMBER)
 def member_dashboard(request):
+    sync_event_statuses()
     user = request.user
     checks = [user.first_name, user.last_name, user.email, user.contact_number, user.photo]
     completeness = round(100 * sum(bool(c) for c in checks) / len(checks))
