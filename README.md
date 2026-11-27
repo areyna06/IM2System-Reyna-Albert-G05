@@ -122,13 +122,43 @@ Created by the two commands above; passwords come from your `.env`.
 
 ## Tests
 
+The tests run against a temporary PostgreSQL test database that Django creates and deletes,
+so your PostgreSQL user needs permission to create databases. With the virtual environment active:
+
 ```powershell
 python manage.py test
 ```
 
-71 tests: the 29 account tests from PD1, plus event-management permissions and business rules,
-registration (duplicates, capacity, deadline, status, cancel and re-register, ownership),
-participant list and student details.
+Run one app or one file only:
+
+```powershell
+python manage.py test events
+python manage.py test events.test_hardening
+python manage.py test accounts
+```
+
+Add `-v 2` to list every test name. Expected result: `Ran 106 tests ... OK`.
+
+| File | What it covers |
+| --- | --- |
+| `accounts/tests.py` | PD1 standard features: registration, login/logout, role dashboards, profile |
+| `events/tests.py` | Event management permissions and business rules |
+| `events/test_registration.py` | Registration, capacity, deadline, cancel / re-register, participants, student details |
+| `events/test_status_sync.py` | PD3 fix ISS-01: events close and complete automatically |
+| `events/test_hardening.py` | PD3 hardening: valid / invalid input, login required, other users' records, wrong roles, POST-only actions, CSRF, custom 404 / 500 pages, database constraints |
+
+## Hardening (PD3)
+
+- Server-side validation in `events/forms.py` (dates, capacity vs venue, venue double booking, status rules)
+  and `accounts/forms.py`; every action shows a success or error message.
+- Custom `400`, `403`, `403_csrf`, `404` and `500` pages in `templates/`; `DEBUG` comes from `.env` and is off by default.
+- Every event view needs login; organizer views check the role and organization in the view
+  (`events/permissions.py`), and students can only open or cancel their own registrations (others return 404).
+- State-changing actions are POST-only with CSRF tokens; delete asks for confirmation first.
+- Saves that touch several rows run in `transaction.atomic()` with row locks (registration, event create/edit, cancel).
+- Database `CHECK` and `UNIQUE` constraints back up the form rules (`events/models.py`, migration `0003`).
+- `python manage.py update_event_statuses` closes events after their deadline and completes them after they end
+  (the same update also runs whenever event pages or dashboards are opened).
 
 ## Branches
 
@@ -137,6 +167,11 @@ participant list and student details.
 - `feature/event-management` – event data model and officer event CRUD
 - `feature/event-registration` – student details, browsing, registration, cancellation, My events, participants
 - `feature/pd2-docs` – PD2 completion report
+- `fix/iss-01-event-status-auto-update` – PD3: automatic Closed / Completed status (PD2 issue ISS-01)
+- `hardening/validation-and-error-pages` – PD3: error pages, status validation, atomic saves, double-submit guard, security settings
+- `hardening/data-integrity` – PD3: model constraints and validators
+- `test/core-feature-tests` – PD3: hardening tests and README test instructions
+- `docs/pd3-report` – PD3 hardening report
 
 ## Project layout
 
